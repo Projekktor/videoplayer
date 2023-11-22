@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>ORAES_VID</title>
+  <style>
+    body {background-color: #000;}
+    
+    input[type="file"]::file-selector-button {
+      font-size: 25px;
+      color: #000;
+      background-color: #F0F0F0;
+      cursor: pointer;
+      padding: 15px 20px;
+      border-radius: 12px;
+    }
+
+    input[type="file"] {
+      color: #ffffff;
+      font-size: 25px;
+      width: 604px;
+      position: absolute;
+      top: 160px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    .play-button {
+      font-size: 45px;
+      color: white;
+      background-color: #000;
+      border-radius: 0px;
+      border-width: 0ch;
+      cursor: pointer;
+      padding: 15px 20px;
+      width: 980px;
+      position: absolute;
+      top: 250px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    .play-button:hover {
+      background-color: #000;
+    }
+
+    #videoElement {
+      width: 100%;
+      max-width: 980px;
+      height: 552px;
+      border: 0px solid #ccc;
+      border-radius: 0px;
+      margin: 0px auto;
+      position: absolute;
+      top: 644px;
+      transform: translate(0, -50%);
+      left: 0;
+      right: 0;
+    }
+
+  </style>
+</head>
+<body>
+  <input type="file" id="fileInput" class="choose-file-button" accept=".encrypted">
+  <button class="play-button" onclick="playEncryptedVideo()">No internet connection, can't play the video</button>
+  <video id="videoElement" controls oncontextmenu="return false;" disablePictureInPicture></video>
+  <p id="status"></p>
+
+  <script>
+    const password = "password";
+
+    async function playEncryptedVideo() {
+      const fileInput = document.getElementById('fileInput');
+      const file = fileInput.files[0];
+
+      const fileData = await readFile(file);
+      const decryptedData = await decryptData(fileData);
+
+      const blob = new Blob([decryptedData], { type: file.type });
+      const url = URL.createObjectURL(blob);
+
+      const videoElement = document.getElementById('videoElement');
+      videoElement.src = url;
+
+      // Prevent the default download behavior
+      videoElement.addEventListener('contextmenu', function (e) {
+        e.preventDefault();
+      });
+
+      // Remove the download button from controls
+      videoElement.controlsList.add('nodownload');
+
+      document.getElementById('status').innerText = "Decryption and playback complete!";
+    }
+
+    async function readFile(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsArrayBuffer(file);
+      });
+    }
+
+    async function decryptData(data) {
+      const encoder = new TextEncoder();
+      const passwordData = encoder.encode(password);
+
+      const passwordKey = await crypto.subtle.digest('SHA-256', passwordData);
+
+      const key = await crypto.subtle.importKey(
+        'raw',
+        passwordKey,
+        'AES-CBC',
+        false,
+        ['decrypt']
+      );
+
+      const iv = new Uint8Array(data.slice(0, 16));
+      const encryptedData = data.slice(16);
+
+      const decryptedData = await crypto.subtle.decrypt(
+        { name: 'AES-CBC', iv },
+        key,
+        encryptedData
+      );
+
+      return decryptedData;
+    }
+  </script>
+</body>
+</html>
