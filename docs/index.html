@@ -22,7 +22,8 @@
       top: 160px;
       left: 50%;
       transform: translateX(-50%);
-    }
+    }
+
 
     .play-button {
       font-size: 45px;
@@ -60,8 +61,8 @@
   </style>
 </head>
 <body>
-  <input type="file" id="fileInput" class="choose-file-button" accept=".encrypted">
-  <button class="play-button" onclick="playEncryptedVideo()">No internet connection, can't play the video</button>
+  <input type="file" id="fileInput" class="choose-file-button">
+  <button class="play-button" onclick="playEncryptedVideo()">Projekktor HTML5 VideoPlayer</button>
   <video id="videoElement" controls oncontextmenu="return false;" disablePictureInPicture></video>
   <p id="status"></p>
 
